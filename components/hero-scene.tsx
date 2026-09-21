@@ -66,12 +66,14 @@ export function HeroScene() {
     let animationFrame = 0;
     let disposed = false;
     let lastPoint: Point | null = null;
+    let targetPoint: Point | null = null;
+    let brushStrength = 1;
     let pointerIsDown = false;
     let distanceToNextCloud = 0;
     let lastFrameTime = 0;
 
     const cloudRadius = () => Math.max(48, Math.min(88, Math.min(width, height) * 0.085));
-    const nextCloudSpacing = () => cloudRadius() * (0.5 + Math.random() * 0.3);
+    const nextCloudSpacing = () => cloudRadius() * (0.18 + Math.random() * 0.1);
 
     const syncCanvasSize = () => {
       const rect = root.getBoundingClientRect();
@@ -93,13 +95,15 @@ export function HeroScene() {
       maskContext.setTransform(dpr, 0, 0, dpr, 0, 0);
       revealContext.setTransform(dpr, 0, 0, dpr, 0, 0);
       lastPoint = null;
+      targetPoint = null;
     };
 
     const addCloudDab = (point: Point, strength = 1) => {
-      const radius = cloudRadius() * strength * (0.8 + Math.random() * 0.4);
+      const radius = cloudRadius() * strength * (0.9 + Math.random() * 0.2);
       const lobes = 6 + Math.floor(Math.random() * 4);
       maskContext.save();
       maskContext.globalCompositeOperation = "source-over";
+      maskContext.globalAlpha = 0.32;
       maskContext.translate(point.x, point.y);
       maskContext.rotate(Math.random() * Math.PI * 2);
       maskContext.scale(1.1 + Math.random() * 0.35, 0.75 + Math.random() * 0.25);
@@ -107,8 +111,9 @@ export function HeroScene() {
       const puff = (x: number, y: number, puffRadius: number) => {
         const gradient = maskContext.createRadialGradient(x, y, 0, x, y, puffRadius);
         gradient.addColorStop(0, "rgba(255,255,255,0.96)");
-        gradient.addColorStop(0.6, "rgba(255,255,255,0.9)");
-        gradient.addColorStop(0.82, "rgba(255,255,255,0.55)");
+        gradient.addColorStop(0.35, "rgba(255,255,255,0.78)");
+        gradient.addColorStop(0.7, "rgba(255,255,255,0.3)");
+        gradient.addColorStop(0.9, "rgba(255,255,255,0.06)");
         gradient.addColorStop(1, "rgba(255,255,255,0)");
         maskContext.fillStyle = gradient;
         maskContext.beginPath();
@@ -131,7 +136,7 @@ export function HeroScene() {
     const paintStroke = (from: Point, to: Point, strength = 1) => {
       const distance = Math.hypot(to.x - from.x, to.y - from.y);
       if (distance === 0) return;
-      // Space clouds by travel distance so slow movement retains the puffy edges.
+      // Closely spaced translucent clouds blend into a continuous, soft trail.
       let travelled = distanceToNextCloud;
       for (; travelled <= distance; travelled += nextCloudSpacing()) {
         const progress = travelled / distance;
@@ -161,32 +166,24 @@ export function HeroScene() {
 
     const handlePointerMove = (event: PointerEvent) => {
       if (event.pointerType !== "mouse" && !pointerIsDown) return;
-      const nextPoint = pointFromEvent(event);
-      if (!nextPoint) {
+      targetPoint = pointFromEvent(event);
+      brushStrength = event.pointerType === "mouse" ? 1 : 1.12;
+      if (!targetPoint) {
         lastPoint = null;
-        return;
       }
-
-      if (lastPoint) paintStroke(lastPoint, nextPoint, event.pointerType === "mouse" ? 1 : 1.12);
-      else {
-        addCloudDab(nextPoint, event.pointerType === "mouse" ? 0.9 : 1.12);
-        distanceToNextCloud = nextCloudSpacing();
-      }
-      lastPoint = nextPoint;
     };
 
     const handlePointerDown = (event: PointerEvent) => {
       pointerIsDown = true;
-      const point = pointFromEvent(event);
-      if (!point) return;
-      lastPoint = point;
-      addCloudDab(point, event.pointerType === "mouse" ? 1 : 1.16);
-      distanceToNextCloud = nextCloudSpacing();
+      targetPoint = pointFromEvent(event);
+      brushStrength = event.pointerType === "mouse" ? 1 : 1.16;
+      if (!targetPoint) lastPoint = null;
     };
 
     const handlePointerUp = () => {
       pointerIsDown = false;
       lastPoint = null;
+      targetPoint = null;
     };
 
     const render = (now: number) => {
@@ -198,9 +195,29 @@ export function HeroScene() {
       if (loadedImages === 2) {
         maskContext.save();
         maskContext.globalCompositeOperation = "destination-out";
-        maskContext.fillStyle = `rgba(0,0,0,${1 - Math.exp(-elapsed / 850)})`;
+        maskContext.fillStyle = `rgba(0,0,0,${1 - Math.exp(-elapsed / 1150)})`;
         maskContext.fillRect(0, 0, width, height);
         maskContext.restore();
+
+        // Follow the pointer on animation frames with the same easing at any refresh rate.
+        if (targetPoint) {
+          if (!lastPoint) {
+            lastPoint = { ...targetPoint };
+            addCloudDab(lastPoint, brushStrength);
+            distanceToNextCloud = nextCloudSpacing();
+          } else {
+            const distance = Math.hypot(targetPoint.x - lastPoint.x, targetPoint.y - lastPoint.y);
+            if (distance > 0.1) {
+              const ease = 1 - Math.exp(-elapsed / 42);
+              const nextPoint = {
+                x: lastPoint.x + (targetPoint.x - lastPoint.x) * ease,
+                y: lastPoint.y + (targetPoint.y - lastPoint.y) * ease,
+              };
+              paintStroke(lastPoint, nextPoint, brushStrength);
+              lastPoint = nextPoint;
+            }
+          }
+        }
 
         context.clearRect(0, 0, width, height);
         drawCover(context, frontImage, width, height);
