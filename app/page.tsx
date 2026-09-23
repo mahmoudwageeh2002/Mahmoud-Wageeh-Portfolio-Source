@@ -36,13 +36,13 @@ export default function Home() {
           Explore selected work <ArrowUpRight aria-hidden="true" />
         </Link>
       </Reveal>
-      <Reveal className="hero-stats" delay={0.4}>
+      {/* <Reveal className="hero-stats" delay={0.4}>
         {stats.map((stat) => (
           <div className="stat" key={stat.label}>
             <strong>{stat.value}</strong><span>{stat.label}</span>
           </div>
         ))}
-      </Reveal>
+      </Reveal> */}
     </main>
   );
 }
