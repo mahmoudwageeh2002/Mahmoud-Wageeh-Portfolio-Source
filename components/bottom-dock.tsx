@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { flushSync } from "react-dom";
+import { useNavigationTransition } from "@/components/navigation-transition";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -18,9 +19,10 @@ export function BottomDock() {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const themeTransitionRunning = useRef(false);
+  const { navigate, overlay } = useNavigationTransition();
 
   const toggleTheme = async () => {
-    if (themeTransitionRunning.current) return;
+    if (themeTransitionRunning.current || document.documentElement.dataset.navigationTransition) return;
     const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
     if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setTheme(nextTheme);
@@ -74,10 +76,14 @@ export function BottomDock() {
   };
 
   return (
+    <>
     <div className="dock-wrap">
       <nav className="dock" aria-label="Primary navigation">
         {links.map(({ href, label, icon: Icon }) => (
-          <Link className="dock-link" data-active={pathname === href} href={href} key={href} aria-label={label} title={label}>
+          <Link className="dock-link" data-active={pathname === href} aria-current={pathname === href ? "page" : undefined} href={href} key={href} aria-label={label} title={label} onNavigate={(event) => {
+            if (themeTransitionRunning.current) event.preventDefault();
+            else navigate(event, href);
+          }}>
             <Icon aria-hidden="true" />
           </Link>
         ))}
@@ -88,5 +94,7 @@ export function BottomDock() {
         </button>
       </nav>
     </div>
+    {overlay}
+    </>
   );
 }

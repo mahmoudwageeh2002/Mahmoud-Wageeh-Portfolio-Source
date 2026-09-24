@@ -24,6 +24,9 @@ npm run dev
 pnpm build
 ```
 
+The default build uses Vinext for the Cloudflare-compatible runtime. Vercel is
+configured through `vercel.json` to run the standard Next.js build instead.
+
 ## Main folders
 
 - `app/` — routes, metadata, and global styling
