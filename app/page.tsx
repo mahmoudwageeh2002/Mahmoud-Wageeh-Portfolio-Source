@@ -16,14 +16,21 @@ export default function Home() {
           <span>Software Engineer · Cairo, Egypt</span>
         </div>
         <h1 className="hero-title">
-          Mobile precision.<br /><em>Web scale.</em>
+          Mobile precision.
+          <br />
+          <em>Web scale.</em>
         </h1>
         <p className="hero-summary">{profile.summary}</p>
         <div className="hero-actions">
           <a className="button button-primary" href={`mailto:${profile.email}`}>
             <Mail aria-hidden="true" /> Let&apos;s talk
           </a>
-          <a className="button button-ghost" href={profile.github} target="_blank" rel="noreferrer">
+          <a
+            className="button button-ghost"
+            href={profile.github}
+            target="_blank"
+            rel="noreferrer"
+          >
             <Code2 aria-hidden="true" /> GitHub
             <ArrowUpRight className="button-arrow" aria-hidden="true" />
           </a>
@@ -31,18 +38,14 @@ export default function Home() {
       </Reveal>
       <Reveal className="hero-note" delay={0.25}>
         <span className="mono-label">Current focus</span>
-        <p>Cross-platform products, resilient service architecture, and performance work users can feel.</p>
+        <p>
+          Cross-platform products, resilient service architecture, and
+          performance work users can feel.
+        </p>
         <Link href="/projects" className="text-link">
           Explore selected work <ArrowUpRight aria-hidden="true" />
         </Link>
       </Reveal>
-      {/* <Reveal className="hero-stats" delay={0.4}>
-        {stats.map((stat) => (
-          <div className="stat" key={stat.label}>
-            <strong>{stat.value}</strong><span>{stat.label}</span>
-          </div>
-        ))}
-      </Reveal> */}
     </main>
   );
 }
