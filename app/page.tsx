@@ -3,7 +3,7 @@ import { ArrowUpRight, Code2, Mail } from "lucide-react";
 
 import { HeroScene } from "@/components/hero-scene";
 import { Reveal } from "@/components/reveal";
-import { profile, stats } from "@/data/portfolio";
+import { profile } from "@/data/portfolio";
 
 export default function Home() {
   return (
